@@ -237,7 +237,7 @@ static Node *unary(void) {
   return primary();
 }
 
-// primary = "(" expr ")" | ident | num
+// primary = "(" expr ")" | ident ("(" ")")? | num
 static Node *primary(void) {
   if (consume("(")) {
     Node *node = expr();
@@ -247,10 +247,17 @@ static Node *primary(void) {
 
   Token *tok = consume_ident();
   if (tok) {
-    Var *var = find_var(tok);
-    if (!var)
-      var = new_lvar(strndup(tok->str, tok->len));
-    return new_var_node(var);
+    if (consume("(")) {
+      expect(")");
+      Node *func = new_node(ND_FUNC);
+      func->funcname = strndup(tok->str, tok->len);
+      return func;
+    } else {
+      Var *var = find_var(tok);
+      if (!var)
+        var = new_lvar(strndup(tok->str, tok->len));
+      return new_var_node(var);
+    }
   }
 
   return new_num(expect_number());
