@@ -1,7 +1,9 @@
 #!/bin/bash
 cat <<EOF | gcc -xc -c -o tmp2.o -
+#include <stdio.h>
 int ret3() { return 3; }
 int ret5() { return 5; }
+int ret6(int a, int b, int c, int d, int e, int f) { return a + b + c + d + e + f; }
 EOF
 
 assert() {
@@ -76,5 +78,6 @@ assert 3 'for (;;) return 3; return 5;'
 
 assert 3 'return ret3();'
 assert 5 'return ret5();'
+assert 21 'return ret6(1, 2, 3, 4, 5, 6);'
 
 echo OK

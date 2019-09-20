@@ -237,7 +237,19 @@ static Node *unary(void) {
   return primary();
 }
 
-// primary = "(" expr ")" | ident ("(" ")")? | num
+// func-args = "(" ( assign ( "," assign )* )? ")"
+static Node *func_args(void) {
+  Node head = {};
+  Node *cur = &head;
+  for (int i = 0; (!consume(")") | (i == 5)); i++) {
+    cur->next = new_num(expect_number());
+    cur = cur->next;
+    consume(",");
+  }
+  return head.next;
+}
+
+// primary = "(" expr ")" | ident func-args? | num
 static Node *primary(void) {
   if (consume("(")) {
     Node *node = expr();
@@ -248,9 +260,9 @@ static Node *primary(void) {
   Token *tok = consume_ident();
   if (tok) {
     if (consume("(")) {
-      expect(")");
       Node *func = new_node(ND_FUNC);
       func->funcname = strndup(tok->str, tok->len);
+      func->funcarg = func_args();
       return func;
     } else {
       Var *var = find_var(tok);

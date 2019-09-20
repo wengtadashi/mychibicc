@@ -1,6 +1,7 @@
 #include "chibi.h"
 
 static int labelseq = 1;
+static char *argregs[] = {"RDI", "RSI", "RDX", "RCX", "R8", "R9"};
 
 // Pushes the given node's address to the stack.
 static void gen_addr(Node *node) {
@@ -40,10 +41,21 @@ static void gen(Node *node) {
     gen_addr(node);
     load();
     return;
-  case ND_FUNC:
+  case ND_FUNC: {
+    int stacknum = 0;
+    for (Node *cur = node->funcarg; cur; stacknum++) {
+      gen(cur);
+      cur = cur->next;
+    }
+
+    while (stacknum > 0) {
+      printf("  pop %s\n", argregs[stacknum - 1]);
+      stacknum--;
+    }
     printf("  call %s\n", node->funcname);
     printf("  push rax\n");
     return;
+  }
   case ND_ASSIGN:
     gen_addr(node->lhs);
     gen(node->rhs);
