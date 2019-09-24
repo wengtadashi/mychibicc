@@ -108,9 +108,11 @@ struct Node {
 
 typedef struct Function Function;
 struct Function {
+  Function *next;  // Next Function
   Node *node;
   Var *locals;
   int stack_size;
+  char *funcname;
 };
 
 Function *program(void);

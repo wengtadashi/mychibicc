@@ -60,15 +60,32 @@ static Node *add(void);
 static Node *mul(void);
 static Node *unary(void);
 static Node *primary(void);
+static Function *function();
 
-// program = stmt*
+// program = function function*
 Function *program(void) {
+  Token *tok;
+  Function headfunc = {};
+  Function *curfunc = &headfunc;
+  while (!at_eof()) {
+    curfunc->next = function();
+    curfunc = curfunc->next;
+  }
+  return headfunc.next;
+}
+
+// function = ident "(" ")" "{" stmt* "}"
+Function *function() {
+  Token *tok = consume_ident();
+  expect("(");
+  expect(")");
+  expect("{");
   locals = NULL;
 
   Node head = {};
   Node *cur = &head;
 
-  while (!at_eof()) {
+  while (!consume("}")) {
     cur->next = stmt();
     cur = cur->next;
   }
@@ -76,6 +93,7 @@ Function *program(void) {
   Function *prog = calloc(1, sizeof(Function));
   prog->node = head.next;
   prog->locals = locals;
+  prog->funcname = strndup(tok->str, tok->len);
   return prog;
 }
 

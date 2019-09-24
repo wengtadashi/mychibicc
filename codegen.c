@@ -1,6 +1,7 @@
 #include "chibi.h"
 
 static int labelseq = 1;
+static char *funcname;
 static char *argregs[] = {"RDI", "RSI", "RDX", "RCX", "R8", "R9"};
 
 // Pushes the given node's address to the stack.
@@ -137,7 +138,7 @@ static void gen(Node *node) {
   case ND_RETURN:
     gen(node->lhs);
     printf("  pop rax\n");
-    printf("  jmp .L.return\n");
+    printf("  jmp .L.return.%s\n", funcname);
     return;
   }
 
@@ -187,9 +188,9 @@ static void gen(Node *node) {
 }
 
 void codegen(Function *prog) {
-  printf(".intel_syntax noprefix\n");
-  printf(".global main\n");
-  printf("main:\n");
+  printf(".global %s\n", prog->funcname);
+  printf("%s:\n", prog->funcname);
+  funcname = prog->funcname;
 
   // Prologue
   printf("  push rbp\n");
@@ -201,7 +202,7 @@ void codegen(Function *prog) {
     gen(node);
 
   // Epilogue
-  printf(".L.return:\n");
+  printf(".L.return.%s:\n", funcname);
   printf("  mov rsp, rbp\n");
   printf("  pop rbp\n");
   printf("  ret\n");
