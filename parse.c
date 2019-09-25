@@ -2,13 +2,18 @@
 
 // All local variable instances created during parsing are
 // accumulated to this list.
-Var *locals;
+VarList *locals;
+
+// Arguments
+VarList *args;
 
 // Find a local variable by name.
 static Var *find_var(Token *tok) {
-  for (Var *var = locals; var; var = var->next)
+  for (VarList *list = locals; list; list = list->next) {
+    Var *var = list->var;
     if (strlen(var->name) == tok->len && !strncmp(tok->str, var->name, tok->len))
       return var;
+  }
   return NULL;
 }
 
@@ -45,10 +50,13 @@ static Node *new_var_node(Var *var) {
 
 static Var *new_lvar(char *name) {
   Var *var = calloc(1, sizeof(Var));
-  var->next = locals;
   var->name = name;
-  locals = var;
-  return var;
+
+  VarList *list = calloc(1, sizeof(VarList));
+  list->next = locals;
+  list->var = var;
+  locals = list;
+  return list->var;
 }
 
 static Node *stmt(void);
@@ -64,7 +72,6 @@ static Function *function();
 
 // program = function function*
 Function *program(void) {
-  Token *tok;
   Function headfunc = {};
   Function *curfunc = &headfunc;
   while (!at_eof()) {
@@ -74,17 +81,38 @@ Function *program(void) {
   return headfunc.next;
 }
 
-// function = ident "(" ")" "{" stmt* "}"
+Var *new_arg_var() {
+  Token *tok = consume_ident();
+  if (!tok)
+    return NULL;
+  return new_lvar(strndup(tok->str, tok->len));
+}
+
+// def-func-args = ident ( "," ident )*
+VarList *def_func_args() {
+  if (consume(")"))
+    return NULL;
+  VarList *head = calloc(1, sizeof(VarList));
+  head->var = new_arg_var();
+  VarList *cur = head;
+  while(consume(",")) {
+    cur->next = calloc(1, sizeof(VarList));
+    cur->next->var = new_arg_var();
+    cur = cur->next;
+  }
+  expect(")");
+  return head;
+}
+
+// function = ident "(" def-func-args? ")" "{" stmt* "}"
 Function *function() {
   Token *tok = consume_ident();
   expect("(");
-  expect(")");
+  VarList *args = def_func_args();
   expect("{");
-  locals = NULL;
 
   Node head = {};
   Node *cur = &head;
-
   while (!consume("}")) {
     cur->next = stmt();
     cur = cur->next;
@@ -93,6 +121,7 @@ Function *function() {
   Function *prog = calloc(1, sizeof(Function));
   prog->node = head.next;
   prog->locals = locals;
+  prog->args = args;
   prog->funcname = strndup(tok->str, tok->len);
   return prog;
 }
@@ -260,7 +289,7 @@ static Node *func_args(void) {
   Node head = {};
   Node *cur = &head;
   for (int i = 0; (!consume(")") | (i == 5)); i++) {
-    cur->next = new_num(expect_number());
+    cur->next = assign();
     cur = cur->next;
     consume(",");
   }
@@ -278,10 +307,10 @@ static Node *primary(void) {
   Token *tok = consume_ident();
   if (tok) {
     if (consume("(")) {
-      Node *func = new_node(ND_FUNC);
-      func->funcname = strndup(tok->str, tok->len);
-      func->funcarg = func_args();
-      return func;
+      Node *funcall = new_node(ND_FUNC);
+      funcall->funcname = strndup(tok->str, tok->len);
+      funcall->funcarg = func_args();
+      return funcall;
     } else {
       Var *var = find_var(tok);
       if (!var)

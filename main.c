@@ -12,7 +12,8 @@ int main(int argc, char **argv) {
   for (Function *prog = program(); prog; prog = prog->next) {
     // Assign offsets to local variables.
     int offset = 0;
-    for (Var *var = prog->locals; var; var = var->next) {
+    for (VarList *list = prog->locals; list; list = list->next) {
+      Var *var = list->var;
       offset += 8;
       var->offset = offset;
     }

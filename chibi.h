@@ -34,6 +34,7 @@ bool consume(char *op);
 Token *consume_ident(void);
 void expect(char *op);
 long expect_number(void);
+char *expect_ident(void);
 bool at_eof(void);
 Token *tokenize(void);
 
@@ -47,9 +48,13 @@ extern Token *token;
 // Local variable
 typedef struct Var Var;
 struct Var {
-  Var *next;
   char *name; // Variable name
   int offset; // Offset from RBP
+};
+typedef struct VarList VarList;
+struct VarList {
+  VarList *next;
+  Var *var;
 };
 
 // AST node
@@ -110,7 +115,8 @@ typedef struct Function Function;
 struct Function {
   Function *next;  // Next Function
   Node *node;
-  Var *locals;
+  VarList *locals;
+  VarList *args;
   int stack_size;
   char *funcname;
 };
