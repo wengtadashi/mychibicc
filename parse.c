@@ -274,13 +274,17 @@ static Node *mul(void) {
   }
 }
 
-// unary = ("+" | "-")? unary
+// unary = ("+" | "-" | "*" | "&")? unary
 //       | primary
 static Node *unary(void) {
   if (consume("+"))
     return unary();
   if (consume("-"))
     return new_binary(ND_SUB, new_num(0), unary());
+  if (consume("*"))
+    return new_unary(ND_DEREF, unary());
+  if (consume("&"))
+    return new_unary(ND_ADDR, unary());
   return primary();
 }
 

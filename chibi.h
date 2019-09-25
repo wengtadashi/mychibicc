@@ -77,6 +77,8 @@ typedef enum {
   ND_VAR,       // Variable
   ND_NUM,       // Integer
   ND_FUNC,      // Function
+  ND_DEREF,     // &
+  ND_ADDR,      // *
 } NodeKind;
 
 // AST node type
