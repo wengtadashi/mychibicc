@@ -53,15 +53,15 @@ assert 1 'main () {return 1>=0;}'
 assert 1 'main () {return 1>=1;}'
 assert 0 'main () {return 1>=2;}'
 
-assert 3 'main () {a=3; return a;}'
-assert 8 'main () {a=3; z=5; return a+z;}'
+assert 3 'main () {int a; a=3; return a;}'
+assert 8 'main () {int a; int z; a=3; z=5; return a+z;}'
 
 assert 1 'main () {return 1; 2; 3;}'
 assert 2 'main () {1; return 2; 3;}'
 assert 3 'main () {1; 2; return 3;}'
 
-assert 3 'main () {foo=3; return foo;}'
-assert 8 'main () {foo123=3; bar=5; return foo123+bar;}'
+assert 3 'main () {int foo; foo=3; return foo;}'
+assert 8 'main () {int foo123; int bar; foo123=3; bar=5; return foo123+bar;}'
 
 assert 3 'main () {if (0) return 2; return 3;}'
 assert 3 'main () {if (1-1) return 2; return 3;}'
@@ -70,10 +70,10 @@ assert 2 'main () {if (2-1) return 2; return 3;}'
 
 assert 3 'main () {{1; {2;} return 3;}}'
 
-assert 10 'main () {i=0; while(i<10) i=i+1; return i;}'
-assert 55 'main () {i=0; j=0; while(i<=10) {j=i+j; i=i+1;} return j;}'
+assert 10 'main () {int i; i=0; while(i<10) i=i+1; return i;}'
+assert 55 'main () {int i; int j; i=0; j=0; while(i<=10) {j=i+j; i=i+1;} return j;}'
 
-assert 55 'main () {i=0; j=0; for (i=0; i<=10; i=i+1) j=i+j; return j;}'
+assert 55 'main () {int i; int j; i=0; j=0; for (i=0; i<=10; i=i+1) j=i+j; return j;}'
 assert 3 'main () {for (;;) return 3; return 5;}'
 
 assert 3 'main () {return ret3();}'
@@ -85,12 +85,12 @@ assert 7 'main() { return add2(3,4); } add2(x,y) { return x+y; }'
 assert 1 'main() { return sub2(4,3); } sub2(x,y) { return x-y; }'
 assert 55 'main() { return fib(9); } fib(x) { if (x<=1) return 1; return fib(x-1) + fib(x-2); }'
 
-assert 3 'main() { x=3; return *&x; }'
-assert 3 'main() { x=3; y=&x; z=&y; return **z; }'
-assert 5 'main() { x=3; y=5; return *(&x+8); }'
-assert 3 'main() { x=3; y=5; return *(&y-8); }'
-assert 5 'main() { x=3; y=&x; *y=5; return x; }'
-assert 7 'main() { x=3; y=5; *(&x+8)=7; return y; }'
-assert 7 'main() { x=3; y=5; *(&y-8)=7; return x; }'
+assert 3 'main() { int x; x=3; return *&x; }'
+assert 3 'main() { int x; int y; int z; x=3; y=&x; z=&y; return **z; }'
+assert 5 'main() { int x; int y;x=3; y=5; return *(&x+8); }'
+assert 3 'main() { int x; int y;x=3; y=5; return *(&y-8); }'
+assert 5 'main() { int x; int y;x=3; y=&x; *y=5; return x; }'
+assert 7 'main() { int x; int y;x=3; y=5; *(&x+8)=7; return y; }'
+assert 7 'main() { int x; int y;x=3; y=5; *(&y-8)=7; return x; }'
 
 echo OK

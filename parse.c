@@ -14,7 +14,7 @@ static Var *find_var(Token *tok) {
     if (strlen(var->name) == tok->len && !strncmp(tok->str, var->name, tok->len))
       return var;
   }
-  return NULL;
+  error_tok(tok, "need to be defined");
 }
 
 static Node *new_node(NodeKind kind, Token *tok) {
@@ -137,6 +137,7 @@ static Node *read_expr_stmt(void) {
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
 //      | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+//      | "int" ident ";"
 //      | expr ";"
 static Node *stmt(void) {
   Token *tok;
@@ -144,6 +145,12 @@ static Node *stmt(void) {
     Node *node = new_unary(ND_RETURN, expr(), tok);
     expect(";");
     return node;
+  }
+
+  while (consume("int")) {
+    char *name = expect_ident();
+    Var *var = new_lvar(name);
+    expect(";");
   }
 
   if (tok = consume("if")) {
@@ -326,8 +333,6 @@ static Node *primary(void) {
       return funcall;
     } else {
       Var *var = find_var(tok);
-      if (!var)
-        var = new_lvar(strndup(tok->str, tok->len));
       return new_var_node(var, tok);
     }
   }
